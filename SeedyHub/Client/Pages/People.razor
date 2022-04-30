@@ -1,0 +1,53 @@
+﻿@page "/people"
+@inject IPeopleService PeopleService
+@inject NavigationManager NavigationManager
+
+<PageTitle>People</PageTitle>
+
+<h3>People</h3>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>last Name</th>
+            <th>Role</th>
+            <th>Accepted</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var member in PeopleService.members)
+        {
+            <tr>
+                <td>@member.FirstName</td>
+                <td>@member.LastName</td>
+                <td>@member.Role.RoleName</td>
+                <td>@member.Accepted</td>
+                <td>
+                    <button class="btn btn-primary" @onclick = "(() => ShowMember(member.MemberId))"><i class="oi oi-pencil"></i></button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-primary" @onclick="MemberRegistration">Register for New Member</button>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await PeopleService.GetMembers();
+    }
+
+    void ShowMember(int id)
+    {
+        NavigationManager.NavigateTo($"member/{id}");
+    }
+
+    void MemberRegistration()
+    {
+        NavigationManager.NavigateTo("/member");
+    }
+}
