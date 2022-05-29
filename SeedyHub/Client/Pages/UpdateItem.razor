@@ -1,0 +1,64 @@
+﻿@page "/itemupdate"
+@page "/itemupdate/{id:int}"
+@inject IItemService ItemService
+
+
+ <PageTitle>Update Member</PageTitle>
+        <EditForm Model="itemDetails" OnSubmit="HandleSubmit">
+            <MudCard>
+                <MudCardContent>
+                    <MudSelect Label="Category" @bind-Value="itemDetails.CategoryId">
+                        @foreach (var cate in ItemService.categories)
+                        {
+                            <MudSelectItem Value="cate.CategoryId">@cate.CategoryName</MudSelectItem>
+                        }
+                    </MudSelect>
+                    @{
+                        itemDetails.TotalPrice = itemDetails.Price * itemDetails.Quantity;
+                        itemDetails.TotalQuantity += itemDetails.Quantity; 
+                    }
+                    <MudTextField Label="Name" @bind-Value="itemDetails.ItemName" />
+                    <MudTextField Label="Name" @bind-Value="itemDetails.Description" />
+                    <MudImage Src="@itemDetails.Image" Elevation="25" Class="rounded my-2"></MudImage>
+                    <MudNumericField Label="Price" @bind-Value="itemDetails.Price" />
+                    <MudNumericField Label="Quantity" @bind-Value="itemDetails.Quantity" />
+                    <MudNumericField Label="Total Price" @bind-Value="itemDetails.TotalPrice" />
+                    <MudNumericField Label="Total Quantity" @bind-Value="itemDetails.TotalQuantity" />
+                </MudCardContent>
+            </MudCard>
+             </EditForm>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    ItemDetails itemDetails = new ItemDetails { category = new Category() };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ItemService.GetDetails();
+        await ItemService.GetCategories();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id == null)
+        {
+            itemDetails.category = ItemService.categories[0];
+            itemDetails.CategoryId = itemDetails.category.CategoryId;
+        }
+        else
+        {
+            itemDetails = await ItemService.GetSingleDetails((int)Id);
+        }
+    }
+
+    async Task HandleSubmit()
+    {
+        await ItemService.UpdateDetails(itemDetails);
+    }
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
+}

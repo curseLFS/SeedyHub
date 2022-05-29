@@ -1,0 +1,85 @@
+﻿@page "/datatable"
+
+@inject Microsoft.JSInterop.IJSRuntime JSRuntime;
+@inject IPeopleService PeopleService
+@inject NavigationManager NavigationManager
+
+
+<table id="@Id" class="table" style="width:100%">
+    @ChildContent
+</table>
+ 
+<DataTable>
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>last Name</th>
+            <th>Role</th>
+            <th>Accepted</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var member in PeopleService.members)
+        {
+            <tr>
+                <td>@member.FirstName</td>
+                <td>@member.LastName</td>
+                <td>@member.Role?.RoleName</td>
+                <td>@member.Accepted</td>
+                <td>
+                    <button class="btn btn-primary" @onclick = "(() => ShowMember(member.MemberId))"><i class="oi oi-pencil"></i></button>
+                </td>
+            </tr>
+        }        
+    </tbody>                  
+</DataTable>
+
+@code
+{
+    [Parameter]
+    public bool Searchable { get; set; }
+ 
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+ 
+    [Parameter]
+    public string d { get; set; } = "DataTable-" + Guid.NewGuid().ToString();
+    public int? Id { get; set; }
+    string btnText = string.Empty;
+    Members member = new Members { Role = new Role() };
+ 
+    protected override async Task OnInitializedAsync()
+    {
+        btnText = Id == null ? "Register New Member" : "Update Member";
+
+        await PeopleService.GetMembers();
+        await PeopleService.GetRoles();
+    }
+
+    void ShowMember(int id)
+    {
+        NavigationManager.NavigateTo($"member/{id}");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id == null)
+        {
+            member.Role = PeopleService.roles[0];
+            member.RoleId = member.Role.RoleId;
+        }
+        else
+        {
+            member = await PeopleService.GetSingleMember((int)Id);
+        }
+
+        StateHasChanged();        
+    }
+ 
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JSRuntime.InvokeAsync<string>("init_datatable", new object[] { $"#{Id}", Searchable });
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}

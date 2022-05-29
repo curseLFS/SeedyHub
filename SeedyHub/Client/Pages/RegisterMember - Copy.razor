@@ -1,5 +1,5 @@
-﻿@page "/member"
-@page "/member/{id:int}"
+﻿@page "/member1"
+@page "/member1/{id:int}"
 @inject IPeopleService PeopleService
 @inject NavigationManager NavigationManager
 
@@ -14,28 +14,27 @@
     <h3>Edit @member.FirstName</h3>
         
         <EditForm Model="member" OnSubmit="HandleSubmit">
-            <MudCard>
-                <MudCardContent>
-                    <MudTextField Label="First Name" @bind-Value="member.FirstName"></MudTextField>
-                    <MudTextField Label="Last Name" @bind-Value="member.LastName"></MudTextField>
-                    <MudTextField Label="Suffix" @bind-Value="member.Suffix"></MudTextField>
-                    @*<MudRadioGroup Class="my-4" @bind-SelectedOption="member.GenderId">
-                        @foreach (var gnder in PeopleService.gender)
-                        {
-                            <MudSelectItem Value="gnder.GenderId">@gnder.GenderName</MudSelectItem>
-                        }
-                    </MudRadioGroup>*@
-                    <MudDatePicker Label="Birth Date" @bind-Date="member.Birthday"></MudDatePicker>
-                    <MudSelect Label="Role" @bind-Value="member.RoleId">
-                        @foreach (var role in PeopleService.roles)
-                        {
-                            <MudSelectItem Value="role.RoleId">@role.RoleName</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudCardContent>
-            </MudCard>
-            <MudIconButton OnClick="BackPage" Icon="@Icons.Filled.ArrowBack" Color="MudBlazor.Color.Error" Variant.Filled></MudIconButton>                       
-            <MudButton ButtonType="ButtonType.Submit" Class="mr-4 mt-4">@btnText</MudButton>
+    
+            <div>
+                <label for="firstname">First Name</label>
+               <InputText id="firstname" @bind-Value="member.FirstName" class="form-control"></InputText>       
+           </div>
+            <div>
+                <label for="lastname">Last Name</label>
+               <InputText id="lastname" @bind-Value="member.LastName" class="form-control"></InputText>
+            </div>
+            <div>
+                <label>Role</label><br />
+                <InputSelect @bind-Value="member.RoleId" class="form-select">
+                    @foreach (var role in PeopleService.roles)
+                   {
+                       <option value="@role.RoleId">@role.RoleName</option>
+                   }
+                </InputSelect>
+            </div>
+            <br />
+            <button type="button" class="btn btn-danger" @onclick="BackPage"><i class="oi oi-arrow-thick-left"></i> Back</button>
+            <button type="button" class="btn btn-danger" @onclick="DeleteMember">Delete Member</button>
         </EditForm>
     </div>
 

@@ -1,0 +1,7 @@
+version: '4.7'
+services:
+  ngix: 
+    image: ngix
+    container_name: seedy_hub
+    ports: 
+      - "7128:7128"

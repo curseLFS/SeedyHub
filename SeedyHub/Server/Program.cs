@@ -1,7 +1,9 @@
-global using SeedyHub.Shared;
 global using Microsoft.EntityFrameworkCore;
 global using SeedyHub.Server.Data;
-using Microsoft.AspNetCore.ResponseCompression;
+global using SeedyHub.Shared;
+using Blazored.Toast;
+using SeedyHub.Client.Services;
+using SeedyHub.Server.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,15 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.Configure<BookStoreDatabaseSettings>(
+    builder.Configuration.GetSection("BookStoreDatabase"));
+
+builder.Services.AddSingleton<BooksService>();
+
+builder.Services.AddIgniteUIBlazor();
+builder.Services.AddBlazoredToast();
+
 
 var app = builder.Build();
 

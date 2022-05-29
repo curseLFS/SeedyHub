@@ -1,0 +1,259 @@
+﻿@page "/inventory" 
+
+@inject IItemService ItemService
+@inject NavigationManager NavigationManager
+@inject IToastService toastService
+
+<PageTitle>Inventory</PageTitle>
+    
+<div class="mud-elevation-4 py-8 px-10 rounded white container">
+    <div class="row align-items-start">
+        <div class="col-4">
+            <EditForm Model="itemDetails" OnSubmit="HandleSubmit">
+                @{
+                    itemDetails.TotalPrice = itemDetails.Price * itemDetails.Quantity;
+                    itemDetails.TotalQuantity += itemDetails.Quantity; 
+                }
+                <DataAnnotationsValidator />
+                <MudCard>
+                 
+                        <MudSelect  Label="Category" 
+                                    @bind-Value="itemDetails.CategoryId" 
+                                    Variant="Variant.Outlined">                       
+                            @foreach (var item in ItemService.categories)
+                            {                                
+                                <MudSelectItem Value="item.CategoryId">@item.CategoryName</MudSelectItem>
+                            }
+                        </MudSelect>
+
+                        <MudTextField   Label="Name"               
+                                        @bind-Value="itemDetails.ItemName" 
+                                        For="@(() => itemDetails.ItemName)"
+                                        Variant="Variant.Outlined" />
+
+                        <MudTextField   Label="Description"
+                                        @bind-Value="itemDetails.Description"
+                                        Variant="Variant.Outlined"
+                                        Lines="2"></MudTextField>
+
+                        <MudNumericField    Label="Price" 
+                                            @bind-Value="itemDetails.Price" 
+                                            For="@(() => itemDetails.Price)" 
+                                            Variant="Variant.Outlined" />
+
+                        <MudNumericField    Label="Quantity" 
+                                            @bind-Value="itemDetails.Quantity" 
+                                            For="@(() => itemDetails.Quantity)" 
+                                            Variant="Variant.Outlined" />
+
+                        <MudNumericField    Label="TotalQuantity" 
+                                            @bind-Value="itemDetails.TotalQuantity" 
+                                            For="@(() => itemDetails.TotalQuantity)" 
+                                            Variant="Variant.Outlined" />  
+                                                                    
+                        <MudNumericField    Label="TotalPrice" 
+                                            @bind-Value="itemDetails.TotalPrice" 
+                                            For="@(() => itemDetails.TotalPrice)" 
+                                            Variant="Variant.Outlined" />                   
+                </MudCard>
+
+                <MudButton  ButtonType="ButtonType.Submit" 
+                            Class="mr-4 mt-4"
+                            Variant="Variant.Outlined"
+                            Color="Color.Primary">Submit</MudButton>
+
+                <MudButton  HtmlTag="Label" 
+                                    Variant="Variant.Outlined"
+                                    Class ="mr-4 mt-4"
+                                    Color="Color.Error"
+                                    StartIcon="@Icons.Filled.CloudUpload"
+                                    for="fileInput">Upload Image</MudButton>
+                        <InputFile id="fileInput" OnChange="OnFileChange" hidden></InputFile>
+                        <MudImage Src="@itemDetails.Image" Elevation="25" Class="rounded my-2"></MudImage>
+                
+                <BlazoredToasts Position="ToastPosition.BottomRight"
+                Timeout="10"
+                IconType="IconType.Material"
+                ErrorIcon="error_outline"
+                InfoIcon="school"
+                SuccessIcon="done_outline"
+                WarningIcon="warning" />
+               
+            </EditForm>
+        </div>
+
+        <div class="col-md-8 offset-md-0">
+            <div class="mud-elevation-4 py-8 px-10 rounded white container">
+                <div class="row align-items-start">
+                    <div class="col-4">
+                         <MudImage Src="@selectedItem1?.Image" Elevation="25" Class="rounded my-2"></MudImage>
+                    </div>
+                    <div class="col-md-8 offset-md-0">
+                        <MudText Typo="Typo.h3">@selectedItem1?.ItemName</MudText>
+                        <MudText Typo="Typo.subtitle2">@selectedItem1?.Description</MudText>
+                    </div>
+                </div>
+            </div>
+            <MudTable   Items="ItemService.itemDetails"                         
+                        FixedHeader="true"
+                        Style="cursor: pointer;"
+                        Hover="@hover" 
+                        Striped="@striped" 
+                        Bordered="@bordered" 
+                        Dense="@dense" 
+                        @ref="@_table"
+                        GroupHeaderStyle="background-color:var(--mud-palette-background-grey)"
+                        GroupFooterClass="mb-4"
+                        Class="mb-2" RowsPerPage="5" Breakpoint="Breakpoint.Sm"
+                        LoadingProgressColor="Color.Info"
+                        Filter="new Func<ItemDetails,bool>(FilterFunc1)"
+                            @bind-SelectedItem="selectedItem1">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Items</MudText>
+                    <MudSpacer />
+                    <MudTextField 
+                        @bind-Value="searchString1" 
+                        Placeholder="Search" 
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.Search"
+                        Immediate="true"
+                        IconSize="Size.Medium"
+                        Class="mt-0"></MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Category</MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Price</MudTh>
+                    <MudTh>Quantity</MudTh>
+                    <MudTh>Total Quantity</MudTh>
+                    <MudTh>Total Price</MudTh>
+                    <MudTh></MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>     
+                <RowTemplate>
+                    <MudTd DataLabel="Category">@context.category.CategoryName</MudTd>
+                    <MudTd DataLabel="Name">@context.ItemName</MudTd>
+                    <MudTd DataLabel="Price">@context.Price</MudTd> 
+                    <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+                    <MudTd DataLabel="Total Quantity">@context.TotalQuantity</MudTd>
+                    <MudTd DataLabel="Total Price">@context.TotalPrice</MudTd>
+                    <MudTd DataLabel="Edit">
+                        <MudIconButton OnClick="(() => UpdateItem(context.ItemId))" Icon="@Icons.Material.Filled.Edit" Color="MudBlazor.Color.Primary" Variant="Variant.Filled"></MudIconButton>                       
+                    </MudTd>
+                    <MudTd DataLabel="Delete">
+                        <MudIconButton OnClick="(() => DeleteItem(context.ItemId))" Icon="@Icons.Material.Filled.Delete" Color="MudBlazor.Color.Error" Variant="Variant.Filled"></MudIconButton>
+                    </MudTd>
+                </RowTemplate>                
+                <PagerContent>
+                    <MudPagination SelectedChanged="PageChanged" Count="@((_table.GetFilteredItemsCount() + _table.RowsPerPage - 1) / _table.RowsPerPage)" Class="pa-4"/>   
+                </PagerContent>
+            </MudTable>
+            <div class="d-flex flex-wrap mt-4">
+                <MudSwitch @bind-Checked="@hover" Color="Color.Primary">Hover</MudSwitch>
+                <MudSwitch @bind-Checked="@dense" Color="Color.Secondary">Dense</MudSwitch>
+                <MudSwitch @bind-Checked="@striped" Color="Color.Tertiary">Striped</MudSwitch>
+                <MudSwitch @bind-Checked="@bordered" Color="Color.Warning">Bordered</MudSwitch>
+                <MudSpacer />
+                <div style="min-width:200px;">
+                    <MudText Inline="true">Overall Total Price: @ItemService.itemDetails.Sum(e => e.TotalPrice)</MudText>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    ItemDetails itemDetails = new ItemDetails { category = new Category() };
+
+    private bool dense = false;
+    private bool hover = true;
+    private bool striped = false;
+    private bool bordered = false;
+    private string searchString1 = "";
+    private ItemDetails selectedItem1 = null;
+    private MudTable<ItemDetails> _table;
+    private HashSet<ItemDetails> selectedItems = new HashSet<ItemDetails>();
+    private IEnumerable<ItemDetails> _elements = new List<ItemDetails>();
+
+    DialogOptions updateScreen = new DialogOptions() { Position = DialogPosition.TopCenter };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ItemService.GetDetails();
+        await ItemService.GetCategories();
+    }
+
+    private void PageChanged(int i)
+    {
+        _table.NavigateTo(i - 1);
+    }
+
+    private bool FilterFunc1(ItemDetails details) => FilterFunc(details, searchString1);
+    private bool FilterFunc(ItemDetails details, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (details.ItemName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (details.category.CategoryName.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{details.ItemName} {details.category.CategoryName} {details.Price}".Contains(searchString))
+            return true;
+        return false;
+    }
+
+    void UpdateItem(int id)
+    {
+        NavigationManager.NavigateTo($"itemupdate/{id}");
+    }
+
+    void Register()
+    {
+        NavigationManager.NavigateTo("/item");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id == null)
+        {
+            itemDetails.category = ItemService.categories[0];
+            itemDetails.CategoryId = itemDetails.category.CategoryId;
+        }
+        else
+        {
+            itemDetails = await ItemService.GetSingleDetails((int)Id);
+        }   
+    }
+
+    async Task HandleSubmit()
+    {
+        if (Id == null)
+        {
+            await ItemService.ItemRegistration(itemDetails);
+            itemDetails = new ItemDetails();
+        }
+        else
+        {
+            await ItemService.UpdateDetails(itemDetails);
+        }
+    }
+
+    async Task DeleteItem(int id)
+    {
+        await ItemService.DeleteDetails(id);
+    }
+
+    async Task OnFileChange(InputFileChangeEventArgs e)
+    {
+        var format = "image/png";
+        var resizedImage = await e.File.RequestImageFileAsync(format, 200, 200);
+        var buffer = new byte[resizedImage.Size];
+        await resizedImage.OpenReadStream().ReadAsync(buffer);
+        var imageData = $"data:{format};base64, {Convert.ToBase64String(buffer)}";
+        itemDetails.Image = imageData;
+    }
+}

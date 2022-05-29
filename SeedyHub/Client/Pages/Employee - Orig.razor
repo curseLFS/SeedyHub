@@ -1,0 +1,254 @@
+﻿@page "/employee-orig"
+@inject IPeopleService PeopleService
+@inject NavigationManager NavigationManager
+@*@inject IIgniteUIBlazor IgniteUIBlazor*@
+
+<PageTitle>Employee</PageTitle>
+
+<div class="container" style="margin-top: 60px;">
+    <div class="row align-items-start">
+        <div class="col-4">
+            <h3>Register</h3>
+            @*<EditForm Model="member" OnSubmit="HandleSubmit">      
+                <DataAnnotationsValidator />     
+                <div>
+                    <label for="firstname">First Name</label>
+                    <InputText id="firstname" @bind-Value="member.FirstName" class="form-control"></InputText>       
+                    <ValidationMessage For="@(() => member.FirstName)"></ValidationMessage>
+                </div>
+                <div>
+                    <label for="lastname">Last Name</label>
+                    <InputText id="lastname" @bind-Value="member.LastName" class="form-control"></InputText>
+                    <ValidationMessage For="@(() => member.LastName)"></ValidationMessage>
+                </div>
+                <div>
+                    <label>Role</label><br />
+                    <InputSelect @bind-Value="member.RoleId" class="form-select">
+                        @foreach (var role in PeopleService.roles)
+                        {
+                            <option value="@role.RoleId">@role.RoleName</option>
+                        }
+                    </InputSelect>
+                </div>
+                <br />
+                <button type="submit" class="btn btn-primary">@btnText</button>
+            </EditForm>*@
+        </div>
+
+        <div class="col-md-6 offset-md-2">
+            <h3>Employee</h3>
+            <table id="dtBasicExample" class="table">
+                <thead>
+                <tr>
+                    <th>First Name</th>
+                    <th>last Name</th>
+                    <th>Role</th>
+                    <th>Accepted</th>
+                    <th></th>
+                </tr>
+                </thead>
+               @* <tbody>
+                    @foreach (var member in PeopleService.members)
+                    {
+                        <tr>
+                            <td>@member.FirstName</td>
+                            <td>@member.LastName</td>
+                            <td>@member.Role.RoleName</td>
+                            <td>@member.Accepted</td> 
+                            <td>
+                                <button class="btn btn-primary" @onclick = "(() => ShowMember(member.MemberId))"><i class="oi oi-pencil"></i></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>*@
+            </table>
+        </div>
+       @* <div class="col-md-6 offset-md-2">
+            <h3>Employee</h3>           
+            <div class="options horizontal">
+                <button @onclick="OnCommitClick"  disabled="@ButtonsDisabled">Commit</button>
+                <button @onclick="OnUndoClick" disabled="@ButtonsDisabled">Undo</button>
+                <button @onclick="OnRedoClick" disabled="@ButtonsDisabled">Redo</button>
+            <label>
+            Edit Mode:
+                <select @bind="GridEditMode">
+                    <option>@EditModeType.None</option>
+                    <option>@EditModeType.Cell</option>
+                    <option>@EditModeType.CellBatch</option>
+                    <option>@EditModeType.Row</option>
+                </select>
+            </label>
+            <label>
+                Excel - style Editing
+                <select @bind="GridEditModeClickAction">
+                    <option>@EditModeClickAction.SingleClick</option>
+                    <option>@EditModeClickAction.DoubleClick</option>
+                </select>
+            </label>
+            </div>
+            <IgbDataGrid 
+                Height="300px" 
+                @ref="DataGridRef"
+                DataSource="PeopleService.members"
+                AutoGenerateColumns="false"
+                IsPagerVisible = "true"
+                PageSize = "10"
+                EditModeClickAction="@GridEditModeClickAction"
+                EditMode="@GridEditMode"
+                ActivationMode="@GridActivationMode.Cell"
+                SelectionMode="@GridSelectionMode.SingleRow"
+                SelectionBehavior="@GridSelectionBehavior.ModifierBased"
+                IsColumnOptionsEnabled="true"
+                RowEditStarted="OnRowEditStarted"
+                RowEditEnded="OnRowEditEnded">
+                    <IgbTextColumn Field="FirstName" HeaderText="First Name"></IgbTextColumn>
+                    <IgbTextColumn Field="LastName" HeaderText="Last Name"></IgbTextColumn>
+                    <IgbTextColumn Field="Role.RoleName" HeaderText="Role"></IgbTextColumn>
+                    <IgbTextColumn Field="Accepted" HeaderText="Accepted"></IgbTextColumn>      
+            </IgbDataGrid>
+        </div>*@
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    string btnText = string.Empty;
+    string validationText = string.Empty;
+
+    Members member = new Members { Role = new Role() };
+
+    //private IgbDataGrid DataGridRef;
+    //private EditModeClickAction GridEditModeClickAction = EditModeClickAction.SingleClick; 
+    //private EditModeType _editMode;
+    //public EditModeType GridEditMode
+    //{
+    //    get { return _editMode; }
+    //    set
+    //    {
+    //        _editMode = value;
+    //        if (_editMode == EditModeType.CellBatch)
+    //        {
+    //            ButtonsDisabled = false;
+    //        }
+    //        else
+    //        {
+    //            ButtonsDisabled = true;
+    //        }
+    //    }
+    }
+
+    private bool ButtonsDisabled { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        btnText = Id == null ? "Register New Member" : "Update Member";
+
+        IgbDataGridModule.Register(IgniteUIBlazor);
+
+
+        await PeopleService.GetMembers();
+        await PeopleService.GetRoles();
+
+        this.GridEditMode = EditModeType.Cell;
+    }
+
+    void ShowMember(int id)
+    {
+        NavigationManager.NavigateTo($"member/{id}");
+    }
+
+    void MemberRegistration()
+    {
+        NavigationManager.NavigateTo("/employee");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id == null)
+        {
+            member.Role = PeopleService.roles[0];
+            member.RoleId = member.Role.RoleId;
+        }
+        else
+        {
+            member = await PeopleService.GetSingleMember((int)Id);
+        }
+    }
+
+    async Task HandleSubmit()
+    {
+        if (Id == null)
+        {
+            await PeopleService.MemberRegistration(member);
+        }
+        else
+        {
+            await PeopleService.UpdateMember(member);
+        }
+
+    }
+
+    async Task DeleteMember()
+    {
+        await PeopleService.DeleteMember(member.MemberId);
+    }
+
+    private void OnCommitClick(MouseEventArgs e)
+    {
+        this.DataGridRef.CommitEdits();
+        StateHasChanged();
+
+    }
+
+    private void OnUndoClick(MouseEventArgs e)
+    {
+        this.DataGridRef.Undo();
+        StateHasChanged();
+
+    }
+
+    private void OnRedoClick(MouseEventArgs e)
+    {
+        this.DataGridRef.Redo();
+        StateHasChanged();
+
+    }
+
+    private void OnRowEditEnded(IgbGridRowEditEndedEventArgs e)
+    {
+        if (_editMode == EditModeType.CellBatch)
+        {
+            ButtonsDisabled = false;
+        }
+        else
+        {
+            ButtonsDisabled = true;
+        }
+        StateHasChanged();
+    }
+    private void OnRowEditStarted(IgbGridRowEditStartedEventArgs e)
+    {
+        if (_editMode == EditModeType.CellBatch)
+        {
+            ButtonsDisabled = true;
+        }
+        else
+        {
+            ButtonsDisabled = false;
+        }
+        StateHasChanged();
+    }
+
+    async Task OnFileChange(InputFileChangeEventArgs e)
+    {
+        var format = "image/png";
+        var resizedImage = await e.File.RequestImageFileAsync(format, 200, 200);
+        var buffer = new byte[resizedImage.Size];
+        await resizedImage.OpenReadStream().ReadAsync(buffer);
+        var imageData = $"data:{format};base64, {Convert.ToBase64String(buffer)}";
+       // member.Image = imageData;
+    }
+}

@@ -1,6 +1,5 @@
-﻿
-
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
+using System.Net;
 
 namespace SeedyHub.Client.Services.PeopleService
 {
@@ -47,15 +46,29 @@ namespace SeedyHub.Client.Services.PeopleService
 
         public async Task MemberRegistration(Members member)
         {
+           
             var result = await _http.PostAsJsonAsync("api/people", member);
-            await SetMembers(result);
+            await SetMembers(result);            
+         
         }
 
         private async Task SetMembers(HttpResponseMessage result)
         {
-            var response = await result.Content.ReadFromJsonAsync<List<Members>>();
-            members = response;
-            _navigationManager.NavigateTo("people");
+
+            if (result.StatusCode == HttpStatusCode.OK)
+            {
+                var response = await result.Content.ReadFromJsonAsync<List<Members>>();
+                members = response;
+                //_navigationManager.NavigateTo("people");
+                _navigationManager.NavigateTo("employee");
+            }
+            else 
+            {
+                var response = ((uint)result.StatusCode);
+               // _navigationManager.NavigateTo("member");
+                _navigationManager.NavigateTo("employee");
+            }
+            
         }
 
         public async Task UpdateMember(Members member)
